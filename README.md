@@ -4,7 +4,7 @@ Generate professional, PDF resumes simply by submitting a Google Form — no cod
 
 📌 Live Demo
 
-▶️ Click here to fill and generate your resume
+https://docs.google.com/forms/d/e/1FAIpQLSdqZzEmvR5iXOHG0eLgmjYqUnY_6vh1Rmg9SDSqi8U9ve1BOQ/viewform?usp=dialog
 
 🔧 Tools Used
 
