@@ -1,0 +1,69 @@
+function onFormSubmit(e) {
+  const row = e.values;
+
+  const data = {
+    full_name: row[1],
+    email: row[2],
+    phone: row[3],
+    address: row[4],
+    summary: row[5],
+    skills: row[6].split(',').map(s => s.trim()),
+    awards: row[7].split(',').map(a => a.trim()),
+    languages: row[8].split(',').map(l => l.trim()),
+    education: JSON.parse(row[9]),
+    work_experience: JSON.parse(row[10]),
+    projects: JSON.parse(row[11])
+  };
+
+  const TEMPLATE_ID = '1HMcpi5-VHe8SEErkRzYaVpIrizEt65KzmfRMWU2aVrE'; // Your resume template Doc ID
+  const folder = DriveApp.getRootFolder();
+  const copy = DriveApp.getFileById(TEMPLATE_ID).makeCopy(`${data.full_name} Resume`, folder);
+  const doc = DocumentApp.openById(copy.getId());
+  const body = doc.getBody();
+
+  // Format education block
+  const educationBlock = data.education.map(edu => {
+    let text = `• ${edu.degree}, ${edu.institution} — ${edu.graduation}`;
+    if (edu.concentrations) text += `\n  Concentration: ${edu.concentrations}`;
+    if (edu.coursework) text += `\n  Coursework: ${edu.coursework.join(', ')}`;
+    return text;
+  }).join('\n\n');
+
+  // Format experience block
+  const experienceBlock = data.work_experience.map(exp => {
+    return `• ${exp.role} — ${exp.company} (${exp.duration})\n  - ${exp.description}`;
+  }).join('\n\n');
+
+  // Format others
+  const skillsBlock = data.skills.join(', ');
+  const projectsBlock = data.projects.map(p => {
+    return `• ${p.title}\n  Role: ${p.role}\n  Tech: ${p.technologies.join(', ')}\n  Description: ${p.description}`;
+  }).join('\n\n');
+  const awardsBlock = data.awards.map(a => `• ${a}`).join('\n');
+  const languagesBlock = data.languages.join(', ');
+
+  // Replace placeholders
+  body.replaceText('{{full_name}}', data.full_name);
+  body.replaceText('{{email}}', data.email);
+  body.replaceText('{{phone}}', data.phone);
+  body.replaceText('{{address}}', data.address);
+  body.replaceText('{{summary}}', data.summary);
+  body.replaceText('{{education_block}}', educationBlock);
+  body.replaceText('{{experience_block}}', experienceBlock);
+  body.replaceText('{{skills_block}}', skillsBlock);
+  body.replaceText('{{projects_block}}', projectsBlock);
+  body.replaceText('{{awards_block}}', awardsBlock);
+  body.replaceText('{{languages_block}}', languagesBlock);
+
+  doc.saveAndClose();
+
+  const pdf = copy.getAs(MimeType.PDF);
+  const pdfFile = folder.createFile(pdf);
+
+  MailApp.sendEmail({
+    to: data.email,
+    subject: `Your Resume - ${data.full_name}`,
+    body: `Hi ${data.full_name},\n\nHere is your professionally generated resume.\n\nBest,\nAI Resume Bot`,
+    attachments: [pdfFile]
+  });
+}
